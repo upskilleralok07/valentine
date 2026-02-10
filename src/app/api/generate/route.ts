@@ -17,11 +17,11 @@ export async function POST(request: Request) {
         const id = nanoid(6); // Generate short unique ID
         const newConfession = {
             id,
-            senderName,
-            recipientName,
+            sender_name: senderName,
+            recipient_name: recipientName,
             message,
-            musicChoice: musicChoice || 'lofi',
-            createdAt: Date.now(),
+            music_choice: musicChoice || 'lofi',
+            created_at: new Date().toISOString(),
         };
 
         await saveConfession(newConfession);

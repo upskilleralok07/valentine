@@ -1,40 +1,55 @@
-import fs from 'fs/promises';
-import path from 'path';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const DB_FILE = path.join(DATA_DIR, 'confessions.json');
+import { supabase } from './supabase';
 
 export interface Confession {
-    id: string;
-    senderName: string;
-    recipientName: string;
+    id?: string;
+    sender_name: string;
+    recipient_name: string;
     message: string;
-    musicChoice: string;
-    createdAt: number;
-}
-
-// Ensure data directory and file exist
-async function ensureDb() {
-    try {
-        await fs.access(DB_FILE);
-    } catch {
-        await fs.mkdir(DATA_DIR, { recursive: true });
-        await fs.writeFile(DB_FILE, JSON.stringify([]));
-    }
+    music_choice: string;
+    created_at?: string;
 }
 
 export async function saveConfession(data: Confession) {
-    await ensureDb();
-    const fileContent = await fs.readFile(DB_FILE, 'utf-8');
-    const confessions = JSON.parse(fileContent) as Confession[];
-    confessions.push(data);
-    await fs.writeFile(DB_FILE, JSON.stringify(confessions, null, 2));
-    return data;
+    const { data: result, error } = await supabase
+        .from('confessions')
+        .insert([
+            {
+                id: data.id,
+                sender_name: data.sender_name,
+                recipient_name: data.recipient_name,
+                message: data.message,
+                music_choice: data.music_choice,
+            },
+        ])
+        .select();
+
+    if (error) {
+        console.error('Error saving confession:', error);
+        throw new Error(error.message);
+    }
+
+    return result[0];
 }
 
 export async function getConfession(id: string) {
-    await ensureDb();
-    const fileContent = await fs.readFile(DB_FILE, 'utf-8');
-    const confessions = JSON.parse(fileContent) as Confession[];
-    return confessions.find((c) => c.id === id) || null;
+    const { data, error } = await supabase
+        .from('confessions')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error('Error fetching confession:', error);
+        return null;
+    }
+
+    return {
+        id: data.id,
+        senderName: data.sender_name,     // Map back to component prop names
+        recipientName: data.recipient_name,
+        message: data.message,
+        musicChoice: data.music_choice,
+        createdAt: data.created_at
+    };
 }

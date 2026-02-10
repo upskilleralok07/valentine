@@ -34,7 +34,6 @@ export async function generateMetadata(
         openGraph: {
             title: `Message for ${confession.recipientName} 💖`,
             description: 'Open to see your surprise confession!',
-            //   images: ['/og-image.jpg'], // TODO: Add OG Image
         },
     };
 }
