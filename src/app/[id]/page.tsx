@@ -1,4 +1,3 @@
-import { getConfession } from '@/lib/db';
 import ConfessionView from '@/components/ConfessionView';
 import MusicPlayer from '@/components/MusicPlayer';
 import { notFound } from 'next/navigation';
@@ -10,6 +9,23 @@ const MUSIC_MAP: Record<string, string> = {
     acoustic: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_344db5890c.mp3?filename=acoustic-motivation-112617.mp3',
 };
 
+// Helper to decode confession data
+function decodeConfession(encodedId: string) {
+    try {
+        const jsonString = decodeURIComponent(atob(encodedId));
+        const data = JSON.parse(jsonString);
+        return {
+            senderName: data.s,
+            recipientName: data.r,
+            message: data.m,
+            musicChoice: data.mu || 'lofi',
+            id: encodedId // Keep the ID for sharing
+        };
+    } catch (e) {
+        return null;
+    }
+}
+
 // Define Params type based on Next.js 15 requirements
 type Props = {
     params: Promise<{ id: string }>;
@@ -20,7 +36,7 @@ export async function generateMetadata(
     { params }: Props,
 ): Promise<Metadata> {
     const { id } = await params;
-    const confession = await getConfession(id);
+    const confession = decodeConfession(id);
 
     if (!confession) {
         return {
@@ -34,14 +50,13 @@ export async function generateMetadata(
         openGraph: {
             title: `Message for ${confession.recipientName} 💖`,
             description: 'Open to see your surprise confession!',
-            //   images: ['/og-image.jpg'], // TODO: Add OG Image
         },
     };
 }
 
 export default async function ConfessionPage({ params }: Props) {
     const { id } = await params;
-    const confession = await getConfession(id);
+    const confession = decodeConfession(id);
 
     if (!confession) {
         notFound();

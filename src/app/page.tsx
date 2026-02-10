@@ -19,27 +19,28 @@ export default function Home() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      // Create a lightweight object for the URL
+      const data = {
+        s: formData.senderName,      // s = sender
+        r: formData.recipientName,   // r = recipient
+        m: formData.message,         // m = message
+        mu: formData.musicChoice     // mu = music
+      };
 
-      const data = await res.json();
-      if (data.success) {
-        router.push(`/${data.id}?preview=true`);
-      } else {
-        alert('Something went wrong! Please try again.');
-      }
+      // Encode to Base64
+      const jsonString = JSON.stringify(data);
+      const encoded = btoa(encodeURIComponent(jsonString));
+
+      // Redirect to the "id" page which is now the encoded string
+      router.push(`/${encoded}?preview=true`);
     } catch (error) {
       console.error(error);
       alert('Failed to generate page.');
-    } finally {
       setLoading(false);
     }
   };
